@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plazos Chile — Calculadora Jurídica de Plazos y Fechas</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    body { font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+    .tab-active { background-color: #0f172a; color: #ffffff; }
+    .tab-inactive { background-color: #ffffff; color: #475569; }
+    .tab-inactive:hover { background-color: #f1f5f9; color: #0f172a; }
+    .preset-btn { transition: all 0.15s ease; }
+    .preset-btn:hover { transform: translateY(-1px); }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    @media print { .no-print { display: none !important; } }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 min-h-screen antialiased">
+  <div class="max-w-5xl mx-auto px-3 sm:px-4 py-3 sm:py-6">
+    <!-- Header compacto en móvil -->
+    <header class="mb-3 sm:mb-5 flex items-center justify-between gap-2 border-b border-slate-200 pb-2.5 sm:pb-4">
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="inline-flex items-center justify-center w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-900 text-white font-bold text-xs sm:text-sm tracking-tight shrink-0">CL</span>
+          <h1 class="text-base sm:text-2xl font-bold tracking-tight text-slate-900 truncate">Plazos Chile</h1>
+          <span class="hidden sm:inline-block text-xs font-medium px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">Open Source</span>
+        </div>
+        <p class="hidden sm:block mt-1 text-sm text-slate-600">Cómputo de plazos judiciales, civiles y administrativos + diferencia exacta entre fechas (Arts. 48–50 CC, 65–66 CPC y Art. 25 Ley 19.880).</p>
+      </div>
+      <div class="flex items-center gap-2 shrink-0 no-print">
+        <button id="btn-open-holidays" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm font-medium rounded-lg border border-slate-300 bg-white text-slate-700 hover:bg-slate-100 transition">
+          <svg class="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+          <span>Feriados</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Mode Switcher compacto -->
+    <div class="mb-3 sm:mb-5 bg-slate-200/70 p-1 rounded-xl inline-flex w-full sm:w-auto gap-1 no-print" role="tablist">
+      <button id="tab-vencimiento" type="button" role="tab" aria-selected="true" class="flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition tab-active">
+        Calcular Vencimiento
+      </button>
+      <button id="tab-diferencia" type="button" role="tab" aria-selected="false" class="flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition tab-inactive">
+        Entre Dos Fechas
+      </button>
+    </div>
+
+    <!-- PANEL 1: VENCIMIENTO -->
+    <section id="panel-vencimiento" class="space-y-3 sm:space-y-5">
+      <!-- Presets rápidos: una sola fila deslizable en móvil -->
+      <div class="no-print">
+        <div class="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+          <span class="hidden sm:inline text-[11px] font-semibold uppercase tracking-wider text-slate-400 mr-1 shrink-0">Frecuentes:</span>
+          <button type="button" data-preset="15,dias,habil_judicial,sumar,siguiente,1" class="preset-btn shrink-0 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-white hover:bg-blue-50 hover:text-blue-700 text-slate-700 border border-slate-200 shadow-2xs">
+            15d · Ordinario
+          </button>
+          <button type="button" data-preset="10,dias,habil_judicial,sumar,siguiente,1" class="preset-btn shrink-0 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-white hover:bg-blue-50 hover:text-blue-700 text-slate-700 border border-slate-200 shadow-2xs">
+            10d · Apelación
+          </button>
+          <button type="button" data-preset="5,dias,habil_judicial,sumar,siguiente,1" class="preset-btn shrink-0 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-white hover:bg-blue-50 hover:text-blue-700 text-slate-700 border border-slate-200 shadow-2xs">
+            5d · Incidente
+          </button>
+          <button type="button" data-preset="3,dias,habil_judicial,sumar,siguiente,1" class="preset-btn shrink-0 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-white hover:bg-blue-50 hover:text-blue-700 text-slate-700 border border-slate-200 shadow-2xs">
+            3d · Reposición
+          </button>
+          <button type="button" data-preset="5,dias,habil_admin,sumar,siguiente,1" class="preset-btn shrink-0 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 shadow-2xs">
+            5d L-V · Ley 19.880
+          </button>
+          <button type="button" data-preset="6,meses,corrido,sumar,siguiente,0" class="preset-btn shrink-0 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-white hover:bg-blue-50 hover:text-blue-700 text-slate-700 border border-slate-200 shadow-2xs">
+            6m · Abandono (152 CPC)
+          </button>
+          <button type="button" data-preset="3,anos,corrido,sumar,siguiente,0" class="preset-btn shrink-0 px-2.5 py-1 rounded-full text-[11px] sm:text-xs font-medium bg-white hover:bg-blue-50 hover:text-blue-700 text-slate-700 border border-slate-200 shadow-2xs">
+            3a · Abandono Ejec. (153 CPC)
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-5">
+        <!-- Form compacto -->
+        <div class="lg:col-span-5 bg-white rounded-xl border border-slate-200 p-3.5 sm:p-5 shadow-sm space-y-3">
+          <!-- Fila 1: Fecha base -->
+          <div>
+            <div class="flex items-center justify-between mb-1">
+              <label for="v-fecha" class="block text-xs sm:text-sm font-semibold text-slate-800">Fecha base</label>
+              <button id="btn-v-hoy" type="button" class="text-xs font-semibold text-blue-600 hover:text-blue-800">Hoy</button>
+            </div>
+            <input id="v-fecha" type="date" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 sm:py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent" />
+          </div>
+
+          <!-- Fila 2: Operación + Cantidad + Unidad -->
+          <div class="grid grid-cols-12 gap-2">
+            <div class="col-span-4">
+              <label for="v-operacion" class="block text-[11px] font-semibold text-slate-600 mb-0.5">Acción</label>
+              <select id="v-operacion" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 sm:py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
+                <option value="sumar">Sumar (+)</option>
+                <option value="restar">Restar (−)</option>
+              </select>
+            </div>
+            <div class="col-span-4">
+              <label for="v-cantidad" class="block text-[11px] font-semibold text-slate-600 mb-0.5">Plazo</label>
+              <input id="v-cantidad" type="number" min="0" max="3650" value="15" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 sm:py-2 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600" />
+            </div>
+            <div class="col-span-4">
+              <label for="v-unidad" class="block text-[11px] font-semibold text-slate-600 mb-0.5">Unidad</label>
+              <select id="v-unidad" class="w-full rounded-lg border border-slate-300 px-2 py-1.5 sm:py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
+                <option value="dias">Días</option>
+                <option value="meses">Meses</option>
+                <option value="anos">Años</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Fila 3: Tipo de cómputo en 3 botones horizontales compactos -->
+          <div id="v-regimen-group">
+            <label class="block text-[11px] sm:text-xs font-semibold text-slate-600 mb-1">Tipo de cómputo</label>
+            <div class="grid grid-cols-3 gap-1.5">
+              <label class="cursor-pointer">
+                <input type="radio" name="v-regimen" value="habil_judicial" checked class="sr-only peer" />
+                <div class="text-center px-2 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 peer-checked:bg-blue-600 peer-checked:text-white peer-checked:border-blue-600 transition">
+                  <div class="text-xs font-semibold leading-tight">Judicial</div>
+                  <div class="text-[10px] opacity-80 leading-tight mt-0.5">Lun–Sáb</div>
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="v-regimen" value="corrido" class="sr-only peer" />
+                <div class="text-center px-2 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 peer-checked:bg-slate-900 peer-checked:text-white peer-checked:border-slate-900 transition">
+                  <div class="text-xs font-semibold leading-tight">Corridos</div>
+                  <div class="text-[10px] opacity-80 leading-tight mt-0.5">Todos</div>
+                </div>
+              </label>
+              <label class="cursor-pointer">
+                <input type="radio" name="v-regimen" value="habil_admin" class="sr-only peer" />
+                <div class="text-center px-2 py-2 rounded-lg border border-slate-200 bg-slate-50 text-slate-700 peer-checked:bg-amber-600 peer-checked:text-white peer-checked:border-amber-600 transition">
+                  <div class="text-xs font-semibold leading-tight">Admin.</div>
+                  <div class="text-[10px] opacity-80 leading-tight mt-0.5">Lun–Vie</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Opciones avanzadas colapsables en móvil, visibles en desktop -->
+          <details class="pt-2 border-t border-slate-100 group" open>
+            <summary class="text-xs font-semibold text-slate-500 cursor-pointer select-none flex items-center justify-between list-none">
+              <span>Opciones legales (inicio, región, prórroga)</span>
+              <span class="text-[11px] text-blue-600 group-open:hidden">Mostrar</span>
+            </summary>
+            <div class="mt-2.5 space-y-2.5">
+              <div id="v-inicio-group">
+                <label for="v-inicio" class="block text-[11px] font-semibold text-slate-600 mb-0.5">Inicio del cómputo</label>
+                <select id="v-inicio" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
+                  <option value="siguiente">Desde el día siguiente (Art. 65 CPC)</option>
+                  <option value="mismo_dia">Incluyendo fecha base como Día 1</option>
+                </select>
+              </div>
+              <div>
+                <label for="v-regional" class="block text-[11px] font-semibold text-slate-600 mb-0.5">Feriado regional</label>
+                <select id="v-regional" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
+                  <option value="ninguno">Solo feriados nacionales</option>
+                  <option value="arica">Arica y Parinacota (7 de junio)</option>
+                  <option value="chillan">Chillán y Chillán Viejo (20 de agosto)</option>
+                </select>
+              </div>
+              <label class="flex items-start gap-2 cursor-pointer">
+                <input id="v-prorroga" type="checkbox" checked class="mt-0.5 rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
+                <span class="text-xs text-slate-600 leading-snug">
+                  <strong class="text-slate-800">Prorrogar si vence en inhábil</strong> (meses o corridos en domingo/festivo).
+                </span>
+              </label>
+            </div>
+          </details>
+        </div>
+
+        <!-- Result: compacto y visible de inmediato arriba del scroll -->
+        <div class="lg:col-span-7 space-y-3 sm:space-y-4">
+          <div class="bg-slate-900 text-white rounded-xl p-4 sm:p-6 shadow-sm">
+            <div class="flex items-center justify-between gap-2">
+              <span id="v-res-badge" class="text-[10px] sm:text-xs font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-200 border border-blue-400/30">
+                Vencimiento
+              </span>
+              <span id="v-res-corridos" class="text-[11px] sm:text-xs text-slate-300"></span>
+            </div>
+            <div id="v-res-fecha" class="text-xl sm:text-3xl font-bold tracking-tight mt-1.5 sm:mt-2">—</div>
+            <p id="v-res-sub" class="text-xs sm:text-sm text-slate-300 mt-1"></p>
+
+            <div class="mt-3 sm:mt-5 pt-3 sm:pt-4 border-t border-slate-700/80 flex gap-2 no-print">
+              <button id="btn-copy-v" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-white text-slate-900 hover:bg-slate-100 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copiar
+              </button>
+              <button id="btn-ics-v" type="button" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold bg-blue-600 text-white hover:bg-blue-500 transition">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Calendario (.ICS)
+              </button>
+            </div>
+          </div>
+
+          <!-- Desglose y días saltados -->
+          <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+            <h2 class="text-xs sm:text-sm font-semibold text-slate-900 mb-2.5">Detalle del cómputo y días inhábiles</h2>
+            <div id="v-res-nota" class="text-xs text-slate-600 bg-slate-50 border border-slate-200 rounded-lg p-2.5 mb-2.5"></div>
+            <div id="v-res-bank-alert" class="hidden text-xs text-amber-900 bg-amber-50 border border-amber-300 rounded-lg p-2.5 mb-3"></div>
+            <div id="v-res-inhabil-stats" class="grid grid-cols-3 gap-2 sm:gap-3 mb-3 text-center"></div>
+            <div id="v-res-feriados-list" class="space-y-1.5 max-h-48 overflow-y-auto"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PANEL 2: DIFERENCIA ENTRE FECHAS -->
+    <section id="panel-diferencia" class="hidden space-y-3 sm:space-y-5">
+      <div class="bg-white rounded-xl border border-slate-200 p-3.5 sm:p-5 shadow-sm">
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4 items-end">
+          <div>
+            <label for="d-inicio" class="block text-xs sm:text-sm font-semibold text-slate-800 mb-1">Fecha inicial</label>
+            <input id="d-inicio" type="date" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" />
+          </div>
+          <div>
+            <label for="d-fin" class="block text-xs sm:text-sm font-semibold text-slate-800 mb-1">Fecha final</label>
+            <input id="d-fin" type="date" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-600" />
+          </div>
+          <div>
+            <label for="d-regional" class="block text-xs sm:text-sm font-semibold text-slate-800 mb-1">Regional</label>
+            <select id="d-regional" class="w-full rounded-lg border border-slate-300 px-2.5 py-1.5 sm:py-2 text-xs sm:text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-600">
+              <option value="ninguno">Solo nacionales</option>
+              <option value="arica">Arica (7 jun)</option>
+              <option value="chillan">Chillán (20 ago)</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2 pb-1.5">
+            <input id="d-incluir-fin" type="checkbox" class="rounded border-slate-300 text-blue-600 focus:ring-blue-600" />
+            <label for="d-incluir-fin" class="text-[11px] sm:text-xs font-medium text-slate-700 cursor-pointer">Incluir ambos extremos (+1)</label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cards de resultados 2x2 en móvil -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-2.5 sm:gap-4">
+        <div class="bg-slate-900 text-white rounded-xl p-3.5 sm:p-5 shadow-sm">
+          <span class="text-[10px] sm:text-xs font-medium text-slate-300 uppercase tracking-wider">Días Corridos</span>
+          <div id="d-res-corridos" class="text-2xl sm:text-3xl font-bold mt-1">0</div>
+          <div id="d-res-semanas" class="text-[11px] sm:text-xs text-slate-400 mt-0.5">0 sem. y 0 d.</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-3.5 sm:p-5 shadow-sm">
+          <span class="text-[10px] sm:text-xs font-semibold text-blue-700 uppercase tracking-wider">Judiciales (L-S)</span>
+          <div id="d-res-judiciales" class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">0</div>
+          <div class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Sin dom. ni festivos</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-3.5 sm:p-5 shadow-sm">
+          <span class="text-[10px] sm:text-xs font-semibold text-amber-700 uppercase tracking-wider">Admin. (L-V)</span>
+          <div id="d-res-admin" class="text-2xl sm:text-3xl font-bold text-slate-900 mt-1">0</div>
+          <div class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Sin sáb., dom. ni fest.</div>
+        </div>
+        <div class="bg-white rounded-xl border border-slate-200 p-3.5 sm:p-5 shadow-sm">
+          <span class="text-[10px] sm:text-xs font-semibold text-emerald-700 uppercase tracking-wider">Calendario</span>
+          <div id="d-res-calendario" class="text-sm sm:text-lg font-bold text-slate-900 mt-1.5 leading-snug">—</div>
+          <div class="text-[11px] sm:text-xs text-slate-500 mt-0.5">Años, meses y días</div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 p-4 sm:p-5 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <h2 class="text-xs sm:text-sm font-semibold text-slate-900">Desglose del rango seleccionado</h2>
+          <button id="btn-copy-d" type="button" class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-100 text-slate-800 hover:bg-slate-200 transition no-print">
+            Copiar reporte
+          </button>
+        </div>
+        <div id="d-res-bank-alert" class="hidden text-xs text-amber-900 bg-amber-50 border border-amber-300 rounded-lg p-3 mb-3"></div>
+        <div id="d-res-stats" class="grid grid-cols-3 gap-2 sm:gap-3 mb-3 text-center"></div>
+        <div id="d-res-feriados" class="space-y-1.5 max-h-52 overflow-y-auto"></div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="mt-6 pt-3 border-t border-slate-200 text-[11px] sm:text-xs text-slate-500 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5">
+      <span>Herramienta referencial de apoyo jurídico para Chile. Verifica siempre feriados extraordinarios por ley o resoluciones especiales de cada tribunal.</span>
+      <span class="text-slate-400">Feriados nacionales 2024–2030 integrados</span>
+    </footer>
+  </div>
+
+  <!-- Modal Feriados -->
+  <div id="modal-holidays" class="hidden fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[85vh] flex flex-col shadow-xl border border-slate-200">
+      <div class="px-5 py-4 border-b border-slate-200 flex items-center justify-between">
+        <div>
+          <h3 class="text-base font-bold text-slate-900">Feriados Legales de Chile</h3>
+          <p class="text-xs text-slate-500">Usados automáticamente en los cálculos de días hábiles.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <select id="modal-year" class="rounded-lg border border-slate-300 px-2.5 py-1.5 text-sm bg-white">
+            <option value="2025">2025</option>
+            <option value="2026" selected>2026</option>
+            <option value="2027">2027</option>
+            <option value="2028">2028</option>
+          </select>
+          <button id="btn-close-holidays" type="button" class="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-100">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6L6 18M6 6l12 12"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="px-5 py-3.5 bg-slate-50 border-b border-slate-200">
+        <div class="text-xs font-semibold text-slate-700 mb-2">Agregar feriado por contingencia o extraordinario (ej. 17 sep extra, elecciones, suspensión)</div>
+        <div class="flex flex-col sm:flex-row gap-2">
+          <input id="custom-holiday-date" type="date" class="rounded-lg border border-slate-300 px-2.5 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-600" />
+          <input id="custom-holiday-name" type="text" placeholder="Motivo (ej. Feriado extra Fiestas Patrias)" class="flex-1 rounded-lg border border-slate-300 px-3 py-1.5 text-xs bg-white focus:outline-none focus:ring-2 focus:ring-blue-600" />
+          <button id="btn-add-custom-holiday" type="button" class="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800 transition">Agregar</button>
+        </div>
+      </div>
+      <div class="px-5 pt-3">
+        <div class="text-xs bg-amber-50 border border-amber-200 text-amber-900 rounded-lg p-3">
+          <strong>Nota sobre Feriado Bancario (31 de diciembre — Ley N° 21.791 / Art. 38 DFL N° 3):</strong> Los bancos no atienden presencialmente al público, pero <strong>es día hábil judicial y administrativo</strong> (no suspende plazos legales, salvo pago y protesto de letras de cambio).
+        </div>
+      </div>
+      <div id="modal-holidays-body" class="p-5 overflow-y-auto space-y-2 text-sm"></div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div id="toast" class="hidden fixed bottom-5 right-5 z-50 bg-slate-900 text-white text-xs font-medium px-4 py-2.5 rounded-lg shadow-lg"></div>
+
+  <script>
+    // --- Utilidades de fecha en UTC para evitar desfases de zona horaria / horario de verano ---
+    const DIAS_SEMANA = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+    function parseISO(str) {
+      if (!str) return null;
+      const [y, m, d] = str.split('-').map(Number);
+      if (!y || !m || !d) return null;
+      return new Date(Date.UTC(y, m - 1, d));
+    }
+
+    function toISO(date) {
+      const y = date.getUTCFullYear();
+      const m = String(date.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(date.getUTCDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function addDaysUTC(date, days) {
+      const d = new Date(date.getTime());
+      d.setUTCDate(d.getUTCDate() + days);
+      return d;
+    }
+
+    function formatLargo(date) {
+      return `${DIAS_SEMANA[date.getUTCDay()]} ${date.getUTCDate()} de ${MESES[date.getUTCMonth()]} de ${date.getUTCFullYear()}`;
+    }
+
+    function formatCorto(date) {
+      return `${String(date.getUTCDate()).padStart(2, '0')}/${String(date.getUTCMonth() + 1).padStart(2, '0')}/${date.getUTCFullYear()}`;
+    }
+
+    // Cálculo algorítmico de Pascua (Meeus/Jones/Butcher) para años sin tabla fija
+    function getEasterSunday(year) {
+      const a = year % 19;
+      const b = Math.floor(year / 100);
+      const c = year % 100;
+      const d = Math.floor(b / 4);
+      const e = b % 4;
+      const f = Math.floor((b + 8) / 25);
+      const g = Math.floor((b - f + 1) / 3);
+      const h = (19 * a + b - d - g + 15) % 30;
+      const i = Math.floor(c / 4);
+      const k = c % 4;
+      const l = (32 + 2 * e + 2 * i - h - k) % 7;
+      const m = Math.floor((a + 11 * h + 22 * l) / 451);
+      const month = Math.floor((h + l - 7 * m + 114) / 31);
+      const day = ((h + l - 7 * m + 114) % 31) + 1;
+      return new Date(Date.UTC(year, month - 1, day));
+    }
+
+    // Feriados oficiales verificados 2026-2027 + reglas legales generales Chile con respaldo normativo
+    const VERIFIED_HOLIDAYS = {
+      2026: {
+        '2026-01-01': { name: 'Año Nuevo', law: 'Ley 2.977 / Ley 19.973' },
+        '2026-04-03': { name: 'Viernes Santo', law: 'Ley 2.977' },
+        '2026-04-04': { name: 'Sábado Santo', law: 'Ley 2.977' },
+        '2026-05-01': { name: 'Día Nacional del Trabajo', law: 'Código del Trabajo / Ley 19.973' },
+        '2026-05-21': { name: 'Día de las Glorias Navales', law: 'Ley 2.977' },
+        '2026-06-21': { name: 'Día Nacional de los Pueblos Indígenas', law: 'Ley 21.357' },
+        '2026-06-29': { name: 'San Pedro y San Pablo', law: 'Ley 2.977 / Ley 18.432 / Ley 19.668' },
+        '2026-07-16': { name: 'Día de la Virgen del Carmen', law: 'Ley 20.148' },
+        '2026-08-15': { name: 'Asunción de la Virgen', law: 'Ley 2.977' },
+        '2026-09-18': { name: 'Independencia Nacional', law: 'Ley 2.977 / Ley 19.973' },
+        '2026-09-19': { name: 'Día de las Glorias del Ejército', law: 'Ley 2.977 / Ley 20.629' },
+        '2026-10-12': { name: 'Encuentro de Dos Mundos', law: 'Ley 3.810 / Ley 19.668' },
+        '2026-10-31': { name: 'Día Nacional de las Iglesias Evangélicas', law: 'Ley 20.299' },
+        '2026-11-01': { name: 'Día de Todos los Santos', law: 'Ley 2.977' },
+        '2026-12-08': { name: 'Inmaculada Concepción', law: 'Ley 2.977' },
+        '2026-12-25': { name: 'Navidad', law: 'Ley 2.977 / Ley 19.973' }
+      },
+      2027: {
+        '2027-01-01': { name: 'Año Nuevo', law: 'Ley 2.977 / Ley 19.973' },
+        '2027-03-26': { name: 'Viernes Santo', law: 'Ley 2.977' },
+        '2027-03-27': { name: 'Sábado Santo', law: 'Ley 2.977' },
+        '2027-05-01': { name: 'Día Nacional del Trabajo', law: 'Código del Trabajo / Ley 19.973' },
+        '2027-05-21': { name: 'Día de las Glorias Navales', law: 'Ley 2.977' },
+        '2027-06-21': { name: 'Día Nacional de los Pueblos Indígenas', law: 'Ley 21.357' },
+        '2027-06-28': { name: 'San Pedro y San Pablo (trasladado)', law: 'Ley 2.977 / Ley 18.432 / Ley 19.668' },
+        '2027-07-16': { name: 'Día de la Virgen del Carmen', law: 'Ley 20.148' },
+        '2027-08-15': { name: 'Asunción de la Virgen', law: 'Ley 2.977' },
+        '2027-09-18': { name: 'Independencia Nacional', law: 'Ley 2.977 / Ley 19.973' },
+        '2027-09-19': { name: 'Día de las Glorias del Ejército', law: 'Ley 2.977 / Ley 20.629' },
+        '2027-10-11': { name: 'Encuentro de Dos Mundos (trasladado)', law: 'Ley 3.810 / Ley 19.668' },
+        '2027-10-30': { name: 'Día Nacional de las Iglesias Evangélicas', law: 'Ley 20.299' },
+        '2027-11-01': { name: 'Día de Todos los Santos', law: 'Ley 2.977' },
+        '2027-12-08': { name: 'Inmaculada Concepción', law: 'Ley 2.977' },
+        '2027-12-25': { name: 'Navidad', law: 'Ley 2.977 / Ley 19.973' }
+      }
+    };
+
+    function shiftMondayLey19668(date) {
+      const dow = date.getUTCDay();
+      if (dow === 2) return addDaysUTC(date, -1);
+      if (dow === 3) return addDaysUTC(date, -2);
+      if (dow === 4) return addDaysUTC(date, -3);
+      if (dow === 5) return addDaysUTC(date, 3);
+      return date;
+    }
+
+    function getHolidaysForYear(year, regional = 'ninguno') {
+      let map = {};
+      if (VERIFIED_HOLIDAYS[year]) {
+        map = { ...VERIFIED_HOLIDAYS[year] };
+      } else {
+        const easter = getEasterSunday(year);
+        map[`${year}-01-01`] = { name: 'Año Nuevo', law: 'Ley 2.977 / Ley 19.973' };
+        map[toISO(addDaysUTC(easter, -2))] = { name: 'Viernes Santo', law: 'Ley 2.977' };
+        map[toISO(addDaysUTC(easter, -1))] = { name: 'Sábado Santo', law: 'Ley 2.977' };
+        map[`${year}-05-01`] = { name: 'Día Nacional del Trabajo', law: 'Código del Trabajo / Ley 19.973' };
+        map[`${year}-05-21`] = { name: 'Día de las Glorias Navales', law: 'Ley 2.977' };
+        map[`${year}-06-21`] = { name: 'Día Nacional de los Pueblos Indígenas', law: 'Ley 21.357' };
+        map[toISO(shiftMondayLey19668(new Date(Date.UTC(year, 5, 29))))] = { name: 'San Pedro y San Pablo', law: 'Ley 2.977 / Ley 19.668' };
+        map[`${year}-07-16`] = { name: 'Día de la Virgen del Carmen', law: 'Ley 20.148' };
+        map[`${year}-08-15`] = { name: 'Asunción de la Virgen', law: 'Ley 2.977' };
+        map[`${year}-09-18`] = { name: 'Independencia Nacional', law: 'Ley 2.977 / Ley 19.973' };
+        map[`${year}-09-19`] = { name: 'Día de las Glorias del Ejército', law: 'Ley 2.977 / Ley 20.629' };
+        map[toISO(shiftMondayLey19668(new Date(Date.UTC(year, 9, 12))))] = { name: 'Encuentro de Dos Mundos', law: 'Ley 3.810 / Ley 19.668' };
+        const oct31 = new Date(Date.UTC(year, 9, 31));
+        const dow31 = oct31.getUTCDay();
+        let evang = oct31;
+        if (dow31 === 2) evang = addDaysUTC(oct31, -4);
+        else if (dow31 === 3) evang = addDaysUTC(oct31, 2);
+        map[toISO(evang)] = { name: 'Día Nacional de las Iglesias Evangélicas', law: 'Ley 20.299' };
+        map[`${year}-11-01`] = { name: 'Día de Todos los Santos', law: 'Ley 2.977' };
+        map[`${year}-12-08`] = { name: 'Inmaculada Concepción', law: 'Ley 2.977' };
+        map[`${year}-12-25`] = { name: 'Navidad', law: 'Ley 2.977 / Ley 19.973' };
+      }
+      if (regional === 'arica') {
+        map[`${year}-06-07`] = { name: 'Asalto y Toma del Morro de Arica (Regional)', law: 'Ley 20.663' };
+      } else if (regional === 'chillan') {
+        map[`${year}-08-20`] = { name: 'Nacimiento de Bernardo O’Higgins (Chillán / Chillán Viejo)', law: 'Ley 20.768' };
+      }
+      return map;
+    }
+
+    const CUSTOM_HOLIDAYS_KEY = 'plazos_chile_custom_holidays_v1';
+    let customHolidays = {};
+    try {
+      const saved = localStorage.getItem(CUSTOM_HOLIDAYS_KEY);
+      if (saved) customHolidays = JSON.parse(saved) || {};
+    } catch (e) {
+      customHolidays = {};
+    }
+
+    function saveCustomHolidays() {
+      try {
+        localStorage.setItem(CUSTOM_HOLIDAYS_KEY, JSON.stringify(customHolidays));
+      } catch (e) {}
+    }
+
+    let holidayCache = {};
+    function getHolidayInfo(date, regional) {
+      const iso = toISO(date);
+      if (customHolidays[iso]) return { name: `${customHolidays[iso]} (Contingencia)`, law: 'Agregado manualmente' };
+      const y = date.getUTCFullYear();
+      const key = `${y}-${regional}`;
+      if (!holidayCache[key]) {
+        holidayCache[key] = getHolidaysForYear(y, regional);
+      }
+      return holidayCache[key][iso] || null;
+    }
+    function getHolidayName(date, regional) {
+      const info = getHolidayInfo(date, regional);
+      return info ? info.name : null;
+    }
+
+    function isInhabil(date, regimen, regional) {
+      const dow = date.getUTCDay();
+      const holiday = getHolidayName(date, regional);
+      if (regimen === 'habil_judicial') {
+        return dow === 0 || Boolean(holiday);
+      }
+      if (regimen === 'habil_admin') {
+        return dow === 0 || dow === 6 || Boolean(holiday);
+      }
+      return false;
+    }
+
+    // Art. 48 Código Civil: suma/resta exacta de meses o años
+    function addMonthsCivil(date, months) {
+      const origDay = date.getUTCDate();
+      const totalMonths = date.getUTCFullYear() * 12 + date.getUTCMonth() + months;
+      const targetYear = Math.floor(totalMonths / 12);
+      const targetMonth = ((totalMonths % 12) + 12) % 12;
+      const lastDayOfTarget = new Date(Date.UTC(targetYear, targetMonth + 1, 0)).getUTCDate();
+      const targetDay = Math.min(origDay, lastDayOfTarget);
+      return new Date(Date.UTC(targetYear, targetMonth, targetDay));
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.classList.remove('hidden');
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.classList.add('hidden'), 2600);
+    }
+
+    function copyText(text) {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(() => showToast('Copiado al portapapeles')).catch(() => fallbackCopy(text));
+      } else {
+        fallbackCopy(text);
+      }
+    }
+
+    function fallbackCopy(text) {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      ta.style.position = 'fixed';
+      ta.style.opacity = '0';
+      document.body.appendChild(ta);
+      ta.select();
+      try {
+        document.execCommand('copy');
+        showToast('Copiado al portapapeles');
+      } catch (e) {
+        showToast('No se pudo copiar automáticamente');
+      }
+      document.body.removeChild(ta);
+    }
+
+    // --- Estado y cálculo MODO 1: VENCIMIENTO ---
+    let lastVencimientoSummary = '';
+    let lastVencimientoDate = null;
+
+    function calculateVencimiento() {
+      const fechaStr = document.getElementById('v-fecha').value;
+      const baseDate = parseISO(fechaStr);
+      if (!baseDate) return;
+
+      const op = document.getElementById('v-operacion').value;
+      const cantidad = Math.max(0, parseInt(document.getElementById('v-cantidad').value || '0', 10));
+      const unidad = document.getElementById('v-unidad').value;
+      const regimen = document.querySelector('input[name="v-regimen"]:checked').value;
+      const inicio = document.getElementById('v-inicio').value;
+      const regional = document.getElementById('v-regional').value;
+      const prorroga = document.getElementById('v-prorroga').checked;
+
+      // Mostrar/ocultar controles según unidad
+      const isDias = unidad === 'dias';
+      document.getElementById('v-regimen-group').classList.toggle('opacity-50', !isDias);
+      document.getElementById('v-inicio-group').classList.toggle('hidden', !isDias);
+
+      const dir = op === 'sumar' ? 1 : -1;
+      let targetDate = new Date(baseDate.getTime());
+      let prorrogado = false;
+      let nota = '';
+
+      if (!isDias) {
+        const mult = unidad === 'anos' ? 12 : 1;
+        targetDate = addMonthsCivil(baseDate, dir * cantidad * mult);
+        const effReg = regimen === 'habil_admin' ? 'habil_admin' : 'habil_judicial';
+        if (prorroga && isInhabil(targetDate, effReg, regional)) {
+          while (isInhabil(targetDate, effReg, regional)) {
+            targetDate = addDaysUTC(targetDate, dir);
+          }
+          prorrogado = true;
+        }
+        nota = 'Cómputo por meses/años según el Art. 48 del Código Civil (de igual fecha a igual fecha, o último día del mes si no existe).';
+      } else if (cantidad === 0) {
+        targetDate = new Date(baseDate.getTime());
+        nota = 'Plazo de 0 días: la fecha resultante coincide con la fecha base.';
+      } else if (regimen === 'corrido') {
+        const offset = inicio === 'mismo_dia' ? (cantidad - 1) : cantidad;
+        targetDate = addDaysUTC(baseDate, dir * offset);
+        if (prorroga && isInhabil(targetDate, 'habil_judicial', regional)) {
+          while (isInhabil(targetDate, 'habil_judicial', regional)) {
+            targetDate = addDaysUTC(targetDate, dir);
+          }
+          prorrogado = true;
+        }
+        nota = 'Plazo de días corridos (Art. 50 CC): se cuentan todos los días calendario sin suspenderse por domingos ni festivos.';
+      } else {
+        let count = 0;
+        let cursor = new Date(baseDate.getTime());
+        if (inicio === 'mismo_dia') {
+          if (!isInhabil(cursor, regimen, regional)) count = 1;
+          while (count < cantidad) {
+            cursor = addDaysUTC(cursor, dir);
+            if (!isInhabil(cursor, regimen, regional)) count++;
+          }
+        } else {
+          while (count < cantidad) {
+            cursor = addDaysUTC(cursor, dir);
+            if (!isInhabil(cursor, regimen, regional)) count++;
+          }
+        }
+        targetDate = cursor;
+        nota = regimen === 'habil_judicial'
+          ? 'Plazo de días hábiles judiciales (Art. 66 CPC / Art. 50 CC): cuenta lunes a sábado, suspendiendo domingos y festivos legales.'
+          : 'Plazo de días hábiles administrativos (Art. 25 Ley 19.880): cuenta lunes a viernes, excluyendo sábados, domingos y festivos legales.';
+      }
+
+      if (prorrogado) {
+        nota += ' Se aplicó prórroga por vencer originalmente en día inhábil.';
+      }
+
+      // Auditar días en el rango [min, max]
+      const minD = targetDate >= baseDate ? baseDate : targetDate;
+      const maxD = targetDate >= baseDate ? targetDate : baseDate;
+      const diffCorridos = Math.round((maxD - minD) / 86400000);
+
+      let sabados = 0, domingos = 0;
+      const feriadosEnRango = [];
+      const bankHolidaysEnRango = [];
+      for (let d = addDaysUTC(minD, 1); d <= maxD; d = addDaysUTC(d, 1)) {
+        const dow = d.getUTCDay();
+        if (dow === 6) sabados++;
+        if (dow === 0) domingos++;
+        if (d.getUTCMonth() === 11 && d.getUTCDate() === 31) {
+          bankHolidaysEnRango.push(formatCorto(d));
+        }
+        const hInfo = getHolidayInfo(d, regional);
+        if (hInfo) {
+          feriadosEnRango.push({ date: new Date(d.getTime()), name: hInfo.name, law: hInfo.law, dow: DIAS_SEMANA[dow] });
+        }
+      }
+      if (minD.getUTCMonth() === 11 && minD.getUTCDate() === 31 && !bankHolidaysEnRango.includes(formatCorto(minD))) {
+        bankHolidaysEnRango.unshift(formatCorto(minD));
+      }
+
+      // Renderizar resultados
+      lastVencimientoDate = targetDate;
+      document.getElementById('v-res-fecha').textContent = formatLargo(targetDate);
+      document.getElementById('v-res-corridos').textContent = `${diffCorridos} días corridos totales`;
+
+      const regimenLabel = unidad !== 'dias'
+        ? (unidad === 'meses' ? 'meses (Art. 48 CC)' : 'años (Art. 48 CC)')
+        : (regimen === 'habil_judicial' ? 'días hábiles judiciales (L-S)' : regimen === 'habil_admin' ? 'días hábiles administrativos (L-V)' : 'días corridos');
+
+      const verb = op === 'sumar' ? 'sumando' : 'restando';
+      document.getElementById('v-res-sub').textContent = `Calculado desde el ${formatCorto(baseDate)} ${verb} ${cantidad} ${regimenLabel}.`;
+      document.getElementById('v-res-nota').textContent = nota;
+
+      document.getElementById('v-res-inhabil-stats').innerHTML = `
+        <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-200">
+          <div class="text-lg font-bold text-slate-900">${feriadosEnRango.length}</div>
+          <div class="text-[11px] text-slate-500">Festivos legales</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-200">
+          <div class="text-lg font-bold text-slate-900">${domingos}</div>
+          <div class="text-[11px] text-slate-500">Domingos</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-200">
+          <div class="text-lg font-bold text-slate-900">${sabados}</div>
+          <div class="text-[11px] text-slate-500">Sábados</div>
+        </div>
+      `;
+
+      const bankEl = document.getElementById('v-res-bank-alert');
+      if (bankHolidaysEnRango.length > 0) {
+        bankEl.innerHTML = `<strong>Alerta Feriado Bancario (${bankHolidaysEnRango.join(', ')}):</strong> El 31 de diciembre no hay atención bancaria presencial (Ley N° 21.791 / Art. 38 DFL N° 3), pero <strong>sí cuenta como día hábil</strong> para plazos judiciales y administrativos (salvo pago y protesto de letras de cambio).`;
+        bankEl.classList.remove('hidden');
+      } else {
+        bankEl.classList.add('hidden');
+      }
+
+      const listEl = document.getElementById('v-res-feriados-list');
+      if (feriadosEnRango.length === 0) {
+        listEl.innerHTML = `<p class="text-xs text-slate-500 italic">No hay festivos legales chilenos entre ambas fechas.</p>`;
+      } else {
+        listEl.innerHTML = feriadosEnRango.map(f => `
+          <div class="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-rose-50/70 border border-rose-200/80 text-rose-900 gap-2">
+            <div class="min-w-0">
+              <span class="font-medium">${f.name}</span>
+              <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">${f.law}</span>
+            </div>
+            <span class="text-rose-700 shrink-0">${f.dow} ${formatCorto(f.date)}</span>
+          </div>
+        `).join('');
+      }
+
+      lastVencimientoSummary = `Vencimiento de plazo: ${formatLargo(targetDate)} (${formatCorto(targetDate)}). Calculado desde ${formatCorto(baseDate)} ${verb} ${cantidad} ${regimenLabel}. Días corridos totales: ${diffCorridos}.`;
+    }
+
+    function downloadICS() {
+      if (!lastVencimientoDate) return;
+      const y = lastVencimientoDate.getUTCFullYear();
+      const m = String(lastVencimientoDate.getUTCMonth() + 1).padStart(2, '0');
+      const d = String(lastVencimientoDate.getUTCDate()).padStart(2, '0');
+      const next = addDaysUTC(lastVencimientoDate, 1);
+      const ny = next.getUTCFullYear();
+      const nm = String(next.getUTCMonth() + 1).padStart(2, '0');
+      const nd = String(next.getUTCDate()).padStart(2, '0');
+      const ics = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Plazos Chile//Calculadora Juridica//ES',
+        'BEGIN:VEVENT',
+        `UID:plazos-chile-${y}${m}${d}-${Date.now()}@local`,
+        `DTSTAMP:${y}${m}${d}T090000Z`,
+        `DTSTART;VALUE=DATE:${y}${m}${d}`,
+        `DTEND;VALUE=DATE:${ny}${nm}${nd}`,
+        'SUMMARY:Vencimiento de Plazo Legal',
+        `DESCRIPTION:${lastVencimientoSummary.replace(/\n/g, ' ')}`,
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([ics], { type: 'text/calendar;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `vencimiento-plazo-${y}-${m}-${d}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('Evento .ICS descargado');
+    }
+
+    // --- Estado y cálculo MODO 2: DIFERENCIA ENTRE FECHAS ---
+    let lastDiffSummary = '';
+
+    function exactCalendarDiff(start, end) {
+      let y1 = start.getUTCFullYear(), m1 = start.getUTCMonth(), d1 = start.getUTCDate();
+      let y2 = end.getUTCFullYear(), m2 = end.getUTCMonth(), d2 = end.getUTCDate();
+
+      let years = y2 - y1;
+      let months = m2 - m1;
+      let days = d2 - d1;
+
+      if (days < 0) {
+        months -= 1;
+        const prevMonthLastDay = new Date(Date.UTC(y2, m2, 0)).getUTCDate();
+        days += prevMonthLastDay;
+      }
+      if (months < 0) {
+        years -= 1;
+        months += 12;
+      }
+      return { years, months, days };
+    }
+
+    function calculateDiferencia() {
+      const sStr = document.getElementById('d-inicio').value;
+      const eStr = document.getElementById('d-fin').value;
+      const d1 = parseISO(sStr);
+      const d2 = parseISO(eStr);
+      if (!d1 || !d2) return;
+
+      const incluirExtremos = document.getElementById('d-incluir-fin').checked;
+      const regional = document.getElementById('d-regional').value;
+
+      const start = d1 <= d2 ? d1 : d2;
+      const end = d1 <= d2 ? d2 : d1;
+
+      let corridos = 0, judiciales = 0, admin = 0, sabados = 0, domingos = 0;
+      const feriados = [];
+      const bankHolidays = [];
+
+      const loopStart = incluirExtremos ? start : addDaysUTC(start, 1);
+      for (let c = new Date(loopStart.getTime()); c <= end; c = addDaysUTC(c, 1)) {
+        corridos++;
+        const dow = c.getUTCDay();
+        if (c.getUTCMonth() === 11 && c.getUTCDate() === 31) {
+          bankHolidays.push(formatCorto(c));
+        }
+        const hInfo = getHolidayInfo(c, regional);
+        if (dow === 6) sabados++;
+        if (dow === 0) domingos++;
+        if (hInfo) feriados.push({ date: new Date(c.getTime()), name: hInfo.name, law: hInfo.law, dow: DIAS_SEMANA[dow] });
+        if (dow !== 0 && !hInfo) judiciales++;
+        if (dow !== 0 && dow !== 6 && !hInfo) admin++;
+      }
+
+      const cal = exactCalendarDiff(start, end);
+      const parts = [];
+      if (cal.years > 0) parts.push(`${cal.years} ${cal.years === 1 ? 'año' : 'años'}`);
+      if (cal.months > 0) parts.push(`${cal.months} ${cal.months === 1 ? 'mes' : 'meses'}`);
+      parts.push(`${cal.days} ${cal.days === 1 ? 'día' : 'días'}`);
+
+      const weeks = Math.floor(corridos / 7);
+      const remDays = corridos % 7;
+
+      document.getElementById('d-res-corridos').textContent = corridos;
+      document.getElementById('d-res-semanas').textContent = `${weeks} ${weeks === 1 ? 'semana' : 'semanas'} y ${remDays} ${remDays === 1 ? 'día' : 'días'}`;
+      document.getElementById('d-res-judiciales').textContent = judiciales;
+      document.getElementById('d-res-admin').textContent = admin;
+      document.getElementById('d-res-calendario').textContent = parts.join(', ');
+
+      document.getElementById('d-res-stats').innerHTML = `
+        <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-200">
+          <div class="text-lg font-bold text-slate-900">${feriados.length}</div>
+          <div class="text-[11px] text-slate-500">Festivos legales</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-200">
+          <div class="text-lg font-bold text-slate-900">${domingos}</div>
+          <div class="text-[11px] text-slate-500">Domingos</div>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-2.5 border border-slate-200">
+          <div class="text-lg font-bold text-slate-900">${sabados}</div>
+          <div class="text-[11px] text-slate-500">Sábados</div>
+        </div>
+      `;
+
+      const dBankEl = document.getElementById('d-res-bank-alert');
+      if (bankHolidays.length > 0) {
+        dBankEl.innerHTML = `<strong>Alerta Feriado Bancario (${bankHolidays.join(', ')}):</strong> El 31 de diciembre no es feriado judicial ni administrativo (Ley N° 21.791 / Art. 38 DFL N° 3), por lo que se contabiliza como día hábil.`;
+        dBankEl.classList.remove('hidden');
+      } else {
+        dBankEl.classList.add('hidden');
+      }
+
+      const fEl = document.getElementById('d-res-feriados');
+      if (feriados.length === 0) {
+        fEl.innerHTML = `<p class="text-xs text-slate-500 italic">No hay festivos legales en el rango seleccionado.</p>`;
+      } else {
+        fEl.innerHTML = feriados.map(f => `
+          <div class="flex items-center justify-between text-xs px-3 py-2 rounded-lg bg-rose-50/70 border border-rose-200/80 text-rose-900 gap-2">
+            <div class="min-w-0">
+              <span class="font-medium">${f.name}</span>
+              <span class="ml-1.5 text-[10px] px-1.5 py-0.5 rounded bg-rose-100 text-rose-800">${f.law}</span>
+            </div>
+            <span class="text-rose-700 shrink-0">${f.dow} ${formatCorto(f.date)}</span>
+          </div>
+        `).join('');
+      }
+
+      lastDiffSummary = `Entre ${formatCorto(start)} y ${formatCorto(end)}: ${corridos} días corridos (${parts.join(', ')}), ${judiciales} días hábiles judiciales (L-S) y ${admin} días hábiles administrativos (L-V).`;
+    }
+
+    // --- Modal de feriados ---
+    function renderHolidaysModal() {
+      const year = parseInt(document.getElementById('modal-year').value, 10);
+      const regional = document.getElementById('v-regional').value;
+      const map = getHolidaysForYear(year, regional);
+      const combined = {};
+      Object.entries(map).forEach(([iso, item]) => {
+        combined[iso] = { name: item.name, law: item.law, type: item.name.includes('Regional') || item.name.includes('Chillán') ? 'Regional' : 'Permanente' };
+      });
+      Object.entries(customHolidays).forEach(([iso, name]) => {
+        if (iso.startsWith(`${year}-`)) {
+          combined[iso] = { name, law: 'Contingencia local', type: 'Contingencia' };
+        }
+      });
+      const entries = Object.entries(combined).sort((a, b) => a[0].localeCompare(b[0]));
+      document.getElementById('modal-holidays-body').innerHTML = entries.map(([iso, info]) => {
+        const d = parseISO(iso);
+        const dow = DIAS_SEMANA[d.getUTCDay()];
+        const badgeCls = info.type === 'Contingencia'
+          ? 'bg-amber-100 text-amber-800'
+          : info.type === 'Regional'
+            ? 'bg-blue-100 text-blue-800'
+            : 'bg-slate-200 text-slate-700';
+        const delBtn = info.type === 'Contingencia'
+          ? `<button type="button" data-del-holiday="${iso}" class="ml-2 text-xs text-rose-600 hover:text-rose-800 font-semibold">Quitar</button>`
+          : '';
+        return `
+          <div class="flex items-center justify-between px-3 py-2 rounded-lg border border-slate-200 bg-slate-50 gap-2">
+            <div class="min-w-0">
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full ${badgeCls} shrink-0">${info.type}</span>
+                <span class="font-medium text-slate-800 truncate">${info.name}</span>
+              </div>
+              <div class="text-[11px] text-slate-500 mt-0.5 pl-1">${info.law}</div>
+            </div>
+            <div class="flex items-center shrink-0">
+              <span class="text-xs font-medium text-slate-600">${dow} ${formatCorto(d)}</span>
+              ${delBtn}
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.querySelectorAll('[data-del-holiday]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const iso = btn.getAttribute('data-del-holiday');
+          delete customHolidays[iso];
+          saveCustomHolidays();
+          holidayCache = {};
+          renderHolidaysModal();
+          calculateVencimiento();
+          calculateDiferencia();
+          showToast('Feriado por contingencia eliminado');
+        });
+      });
+    }
+
+    // --- Navegación y eventos ---
+    function switchTab(tab) {
+      const isVenc = tab === 'vencimiento';
+      document.getElementById('panel-vencimiento').classList.toggle('hidden', !isVenc);
+      document.getElementById('panel-diferencia').classList.toggle('hidden', isVenc);
+
+      const tV = document.getElementById('tab-vencimiento');
+      const tD = document.getElementById('tab-diferencia');
+      tV.className = `flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${isVenc ? 'tab-active' : 'tab-inactive'}`;
+      tD.className = `flex-1 sm:flex-none px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg text-xs sm:text-sm font-semibold transition ${!isVenc ? 'tab-active' : 'tab-inactive'}`;
+    }
+
+    function init() {
+      if (window.innerWidth < 1024) {
+        const adv = document.querySelector('#panel-vencimiento details');
+        if (adv) adv.removeAttribute('open');
+      }
+      const todayISO = '2026-11-21';
+      document.getElementById('v-fecha').value = todayISO;
+      document.getElementById('d-inicio').value = '2026-05-14';
+      document.getElementById('d-fin').value = todayISO;
+
+      document.getElementById('tab-vencimiento').addEventListener('click', () => switchTab('vencimiento'));
+      document.getElementById('tab-diferencia').addEventListener('click', () => switchTab('diferencia'));
+
+      document.getElementById('btn-v-hoy').addEventListener('click', () => {
+        const now = new Date();
+        const localISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        document.getElementById('v-fecha').value = localISO;
+        calculateVencimiento();
+      });
+
+      ['v-fecha', 'v-operacion', 'v-cantidad', 'v-unidad', 'v-inicio', 'v-regional', 'v-prorroga'].forEach(id => {
+        document.getElementById(id).addEventListener('input', calculateVencimiento);
+        document.getElementById(id).addEventListener('change', calculateVencimiento);
+      });
+      document.querySelectorAll('input[name="v-regimen"]').forEach(el => {
+        el.addEventListener('change', calculateVencimiento);
+      });
+
+      document.querySelectorAll('[data-preset]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const [cant, uni, reg, op, ini, pror] = btn.getAttribute('data-preset').split(',');
+          document.getElementById('v-cantidad').value = cant;
+          document.getElementById('v-unidad').value = uni;
+          document.getElementById('v-operacion').value = op;
+          document.getElementById('v-inicio').value = ini;
+          document.getElementById('v-prorroga').checked = pror === '1';
+          const radio = document.querySelector(`input[name="v-regimen"][value="${reg}"]`);
+          if (radio) radio.checked = true;
+          calculateVencimiento();
+        });
+      });
+
+      ['d-inicio', 'd-fin', 'd-regional', 'd-incluir-fin'].forEach(id => {
+        document.getElementById(id).addEventListener('input', calculateDiferencia);
+        document.getElementById(id).addEventListener('change', calculateDiferencia);
+      });
+
+      document.getElementById('btn-copy-v').addEventListener('click', () => copyText(lastVencimientoSummary));
+      document.getElementById('btn-ics-v').addEventListener('click', downloadICS);
+      document.getElementById('btn-copy-d').addEventListener('click', () => copyText(lastDiffSummary));
+
+      document.getElementById('btn-open-holidays').addEventListener('click', () => {
+        renderHolidaysModal();
+        document.getElementById('modal-holidays').classList.remove('hidden');
+      });
+      document.getElementById('btn-close-holidays').addEventListener('click', () => {
+        document.getElementById('modal-holidays').classList.add('hidden');
+      });
+      document.getElementById('modal-holidays').addEventListener('click', (e) => {
+        if (e.target.id === 'modal-holidays') document.getElementById('modal-holidays').classList.add('hidden');
+      });
+      document.getElementById('modal-year').addEventListener('change', renderHolidaysModal);
+      document.getElementById('btn-add-custom-holiday').addEventListener('click', () => {
+        const iso = document.getElementById('custom-holiday-date').value;
+        const name = (document.getElementById('custom-holiday-name').value || '').trim() || 'Feriado extraordinario';
+        if (!iso) {
+          showToast('Selecciona una fecha para el feriado');
+          return;
+        }
+        customHolidays[iso] = name;
+        saveCustomHolidays();
+        holidayCache = {};
+        document.getElementById('modal-year').value = iso.slice(0, 4);
+        document.getElementById('custom-holiday-name').value = '';
+        renderHolidaysModal();
+        calculateVencimiento();
+        calculateDiferencia();
+        showToast('Feriado por contingencia agregado');
+      });
+
+      calculateVencimiento();
+      calculateDiferencia();
+    }
+
+    init();
+  </script>
+</body>
+</html>
